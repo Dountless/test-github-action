@@ -1,0 +1,18 @@
+name: MyworkflowforTest
+
+on:
+    [push]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checout Code
+              uses: action/checkout@v6
+
+            - name: print file
+              run: ls -ltra
+
+            - name: Cat readme
+              run: cat README.md
+              
