@@ -13,6 +13,22 @@ jobs:
             - name: print file
               run: ls -ltra
 
-            - name: Cat readme
-              run: cat README.md
+            - name: Install CowSay Programm
+              run: sudo apt-get install cowsay -y 
+
+            - name: Generate ArtWork
+              run: cowsay -f dragon "Hello DEEPAK I am Dragon... " >> dragon.txt
+
+    Test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Chelout
+              uses: actions/checkout@v6
+
+            - name: print 
+              run: ls -ltra
+
+            - name: print dragonfile
+              run: cat dragon.txt
+
               
