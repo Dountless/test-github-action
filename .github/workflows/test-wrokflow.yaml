@@ -19,11 +19,23 @@ jobs:
             - name: Generate ArtWork
               run: cowsay -f dragon "Hello DEEPAK I am Dragon... " >> dragon.txt
 
+            - name: Upload Artiface
+              uses: actions/upload-artifact@v4
+              with:
+                name: dragonfile
+                path: ./dragon.txt
+
     Test:
+        needs: build
         runs-on: ubuntu-latest
         steps:
             - name: Chelout
               uses: actions/checkout@v6
+
+            - uses: actions/download-artifact@v5
+              name: Download Dragon file
+              with:
+                name: dragonfile
 
             - name: print 
               run: ls -ltra
