@@ -58,19 +58,11 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       # --------------------------------------------------
-      # 3. Verify  Azure login And Check Access
+      # 3. Verify  Azure login
       # --------------------------------------------------
       - name: Verify Azure
         run: |
           az account show
-      - name: Check ACR access
-        run: |
-          az acr show \
-           --name k8sDeepcloud \
-           --resource-group AZURE-K8S-RG \
-           --subscription fdcafafb-15c0-4ff6-87f0-cd94994e1a85 \
-           --query "{name:name,loginServer:loginServer,id:id}" \
-           -o table
 
       # --------------------------------------------------
       # 4. Login to ACR
