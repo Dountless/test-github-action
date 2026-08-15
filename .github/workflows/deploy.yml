@@ -113,6 +113,14 @@ jobs:
           docker push "$IMAGE"
 
       # --------------------------------------------------
+      # 8. Install kubectl
+      # --------------------------------------------------
+      - name: Install kubectl
+        run: |
+          az aks install-cli
+          kubectl version --client
+
+      # --------------------------------------------------
       # 7. Install Helm
       # --------------------------------------------------
       - name: Install Helm
