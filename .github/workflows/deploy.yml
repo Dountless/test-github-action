@@ -66,9 +66,12 @@ jobs:
       - name: Check ACR access
         run: |
           az acr show \
-            --name "$ACR_NAME" \
-            --query "{name:name,id:id,loginServer:loginServer}" \
-            -o table
+           --name k8sDeepcloud \
+           --resource-group AZURE-K8S-RG \
+           --subscription fdcafafb-15c0-4ff6-87f0-cd94994e1a85 \
+           --query "{name:name,loginServer:loginServer,id:id}" \
+           -o table
+
       # --------------------------------------------------
       # 4. Login to ACR
       # --------------------------------------------------
