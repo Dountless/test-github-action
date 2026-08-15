@@ -117,8 +117,17 @@ jobs:
       # --------------------------------------------------
       - name: Install kubectl
         run: |
-          az aks install-cli
-          kubectl version --client
+          mkdir -p "$HOME/bin"
+
+          curl -L \
+            -o "$HOME/bin/kubectl" \
+            "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+          chmod +x "$HOME/bin/kubectl"
+
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+          "$HOME/bin/kubectl" version --client
 
       # --------------------------------------------------
       # 7. Install Helm
@@ -139,7 +148,7 @@ jobs:
             --name "$AKS_CLUSTER_NAME" \
             --overwrite-existing
 
-          kubectl cluster-info
+          $HOME/bin/kubectl cluster-info
 
       # --------------------------------------------------
       # 9. Deploy using Helm
@@ -158,11 +167,11 @@ jobs:
       # --------------------------------------------------
       - name: Verify deployment
         run: |
-          kubectl rollout status \
+          $HOME/bin/kubectl rollout status \
             deployment/"$APP_NAME" \
             -n test-app \
             --timeout=180s
 
-          kubectl get pods -n test-app
-          kubectl get svc -n test-app
+          $HOME/bin/kubectl get pods -n test-app
+          $HOME/bin/kubectl get svc -n test-app
 
