@@ -1,0 +1,134 @@
+name: Build and Deploy Node.js App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  # Azure
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+  # Azure resources
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+
+  # Application
+  APP_NAME: test-app
+  IMAGE_NAME: test-node-app
+
+jobs:
+  build-and-deploy:
+    name: Build, Push and Deploy
+    runs-on: aks-runner-set
+
+    steps:
+
+      # --------------------------------------------------
+      # 1. Checkout
+      # --------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------
+      # 2. Login to Azure using OIDC
+      # --------------------------------------------------
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      # --------------------------------------------------
+      # 3. Verify Azure login
+      # --------------------------------------------------
+      - name: Verify Azure
+        run: |
+          az account show
+
+      # --------------------------------------------------
+      # 4. Login to ACR
+      # --------------------------------------------------
+      - name: Login to ACR
+        run: |
+          az acr login --name "$ACR_NAME"
+
+      # --------------------------------------------------
+      # 5. Build Docker image
+      # --------------------------------------------------
+      - name: Build Docker image
+        run: |
+          IMAGE="${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${GITHUB_SHA}"
+
+          echo "Building image: $IMAGE"
+
+          docker build \
+            -t "$IMAGE" \
+            .
+
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      # --------------------------------------------------
+      # 6. Push Docker image
+      # --------------------------------------------------
+      - name: Push Docker image
+        run: |
+          echo "Pushing image: $IMAGE"
+
+          docker push "$IMAGE"
+
+      # --------------------------------------------------
+      # 7. Install Helm
+      # --------------------------------------------------
+      - name: Install Helm
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+          helm version
+
+      # --------------------------------------------------
+      # 8. Get AKS credentials
+      # --------------------------------------------------
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$AKS_CLUSTER_NAME" \
+            --overwrite-existing
+
+          kubectl cluster-info
+
+      # --------------------------------------------------
+      # 9. Deploy using Helm
+      # --------------------------------------------------
+      - name: Deploy application
+        run: |
+          helm upgrade --install "$APP_NAME" \
+            ./helm/test-app \
+            --namespace test-app \
+            --create-namespace \
+            --set image.repository="${ACR_NAME}.azurecr.io/${IMAGE_NAME}" \
+            --set image.tag="${GITHUB_SHA}"
+
+      # --------------------------------------------------
+      # 10. Verify deployment
+      # --------------------------------------------------
+      - name: Verify deployment
+        run: |
+          kubectl rollout status \
+            deployment/"$APP_NAME" \
+            -n test-app \
+            --timeout=180s
+
+          kubectl get pods -n test-app
+          kubectl get svc -n test-app
+

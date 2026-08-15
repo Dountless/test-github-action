@@ -1,0 +1,25 @@
+githubConfigUrl: "https://github.com/Dountless/test-github-action"   # or org URL for org-wide runners
+githubConfigSecret: github-app-secret
+
+containerMode:
+  type: "dind"
+
+template:
+  spec:
+    serviceAccountName: runner-workload-sa
+    containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        command: ["/home/runner/run.sh"]
+        env:
+          - name: AZURE_CLIENT_ID
+            value: "b046b3a9-7da4-4a1b-bb5f-eb9be0c338c1"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+minRunners: 1
+maxRunners: 5
