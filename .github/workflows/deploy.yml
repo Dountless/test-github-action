@@ -70,8 +70,8 @@ jobs:
       #- name: Login to ACR
       #  run: |
       #    az acr login --name "$ACR_NAME"
-       - name: Login to ACR
-         run: |
+      - name: Login to ACR
+        run: |
            echo "Getting ACR access token..."
 
            ACR_TOKEN=$(az acr login \
