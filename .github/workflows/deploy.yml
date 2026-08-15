@@ -67,11 +67,26 @@ jobs:
       # --------------------------------------------------
       # 4. Login to ACR
       # --------------------------------------------------
-      - name: Login to ACR
-        run: |
-          az acr login --name "$ACR_NAME"
-          echo "Docker credentials:"
-          docker info | grep -i username || true
+      #- name: Login to ACR
+      #  run: |
+      #    az acr login --name "$ACR_NAME"
+       - name: Login to ACR
+         run: |
+           echo "Getting ACR access token..."
+
+           ACR_TOKEN=$(az acr login \
+            --name "$ACR_NAME" \
+            --expose-token \
+            --output tsv \
+            --query accessToken)
+
+           echo "$ACR_TOKEN" | docker login \
+            "${ACR_NAME}.azurecr.io" \
+            --username 00000000-0000-0000-0000-000000000000 \
+            --password-stdin
+
+           echo "Docker credentials:"
+           docker info | grep -i username || true
 
       # --------------------------------------------------
       # 5. Build Docker image
