@@ -58,18 +58,25 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       # --------------------------------------------------
-      # 3. Verify Azure login
+      # 3. Verify  Azure login And Check Access
       # --------------------------------------------------
       - name: Verify Azure
         run: |
           az account show
-
+      - name: Check ACR access
+        run: |
+          az acr show \
+            --name "$ACR_NAME" \
+            --query "{name:name,id:id,loginServer:loginServer}" \
+            -o table
       # --------------------------------------------------
       # 4. Login to ACR
       # --------------------------------------------------
       - name: Login to ACR
         run: |
           az acr login --name "$ACR_NAME"
+          echo "Docker credentials:"
+          docker info | grep -i username || true
 
       # --------------------------------------------------
       # 5. Build Docker image
